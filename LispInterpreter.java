@@ -11,6 +11,20 @@ public class LispInterpreter {
     private LispInterpreter() {
         globalEnv.put("T", true);
         globalEnv.put("NIl", false);
+        globalEnv.put("+", null);
+        globalEnv.put("-", null);
+        globalEnv.put("*", null);
+        globalEnv.put("/", null);
+        globalEnv.put("<", null);
+        globalEnv.put(">", null);
+        globalEnv.put("=", null);
+        globalEnv.put("QUOTE", null);
+        globalEnv.put("ATOM", null);
+        globalEnv.put("LIST", null);
+        globalEnv.put("EQUAL", null);
+        globalEnv.put("COND", null);
+        globalEnv.put("SETQ", null);
+        globalEnv.put("DEFUN", null);
     }
     /**
      * constructor Singleton para el intérprete
@@ -121,7 +135,10 @@ public class LispInterpreter {
 
     /**
      * Método que retorna un el tipo de dato que le corresponde al texto ingresado 
-     * Para las palabras comando del intérprete se les guarda como un String
+     * Para las variables y funciones del intérprete se les guarda como un String
+     * Las palabras con comillas se identifican inmediatamente como String y no pasan por este método.
+     * 
+     * 
      * 
      * @param element la cadenta de texto del argumento
      * @return una instancia tipo Object que también es de la clase correspondiente al argumento 
@@ -155,15 +172,59 @@ public class LispInterpreter {
      */
     public Object eval(List<?> list) throws Exception {
         String first = (String) list.get(0); // Se obtiene el comando inicial
-        switch (first) { // Se evalúa si es una función predeterminada, sino se llama al ambiente para retornar el valor de una función nueva
+        int numberOfParams = list.size() - 1;
+        switch (first.toUpperCase()) { // Se evalúa si es una función predeterminada, sino se llama al ambiente para retornar el valor de una función nueva
             case "+":
                 return sum(list.subList(1, list.size()));
+            case "-":
+                return substract(list.subList(1, list.size()));
+            case "*":
+                return product(list.subList(1, list.size()));
+            case "/":
+                return divide(list.subList(1, list.size()));
+            case ">":
+                return moreThan(list.subList(1, list.size()));
+            case "<":
+                return lessThan(list.subList(1, list.size()));
+            case "=":
+                return equal(list.subList(1, list.size()));
+            case "EQUAL":
+                if (numberOfParams != 2) {
+                    throw new Exception();
+                }
+                return equal(list.subList(1, list.size()));
+            case "ATOM":
+                if (numberOfParams != 1) {
+                    throw new Exception();
+                }
+                return atom(list.subList(1, list.size()));
+            case "LIST":
+                return list(list.subList(1, list.size()));
+            case "COND":
+                return cond(list.subList(1, list.size()));
+            case "QUOTE":
+                if (numberOfParams != 1) {
+                    throw new Exception();
+                }
+                return quote(list.subList(1, list.size()));
+            case "SETQ":
+                if (numberOfParams != 2) {
+                    throw new Exception();
+                }
+                setq(list.subList(1, list.size()));
+                return null;
+            case "DEFUN":
+                if (numberOfParams != 3) {
+                    throw new Exception();
+                }
+                defun(list.subList(1, list.size()));
+                return null;
 
             default:
                 Object item = globalEnv.get(first);
                 if (item.getClass() == LispFunction.class) {
-                    if (list.size() - 1 == ((LispFunction) item).getParams().size()) {
-                        return ((LispFunction) item).apply();
+                    if (numberOfParams == ((LispFunction) item).getParams().size()) {
+                        return ((LispFunction) item).apply(list.subList(1, list.size()));
                     } else {
                         throw new Exception();
                     }
@@ -206,7 +267,54 @@ public class LispInterpreter {
         return result;
     }
 
-    
+    //TODO: implement methods
 
+    public Object substract(List<?> args) throws Exception {
+        return null;
+    }
+
+    public Object product(List<?> args) throws Exception {
+        return null;
+    }
+
+    public Object divide(List<?> args) throws Exception {
+        return null;
+    }
+
+    public boolean moreThan(List<?> args) throws Exception {
+        return false;
+    }
+
+    public boolean lessThan(List<?> args) throws Exception {
+        return false;
+    }
+
+    public boolean equal(List<?> args) throws Exception {
+        return false;
+    }
+
+    public boolean atom(List<?> args) throws Exception {
+        return false;
+    }
+
+    public boolean list(List<?> args) throws Exception {
+        return false;
+    }
+
+    public boolean cond(List<?> args) throws Exception {
+        return false;
+    }
+
+    public Object quote(List<?> args) throws Exception {
+        return null;
+    }
+
+    public void setq(List<?> args) throws Exception {
+        return;
+    }
+
+    public void defun(List<?> args) throws Exception {
+        return;
+    }
     
 }
