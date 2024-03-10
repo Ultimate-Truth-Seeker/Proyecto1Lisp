@@ -301,7 +301,7 @@ public class LispInterpreter {
         return false;
     }
 
-    public boolean cond(List<?> args) throws Exception {
+    public Object cond(List<?> args) throws Exception {
         return false;
     }
 
