@@ -294,7 +294,11 @@ public class LispInterpreter {
     }
 
     public boolean atom(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 1) {
+            throw new Exception("La función Atom requiera solo un argumento");
+        }
+        Object arg = parseObject((String) args.get(0));
+        return !(arg instanceof List);
     }
 
     public boolean list(List<?> args) throws Exception {
