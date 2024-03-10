@@ -290,7 +290,12 @@ public class LispInterpreter {
     }
 
     public boolean equal(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception("La función Equal requiera dos argumentos");
+        }
+        Object arg1 = parseObject((String) args.get(0));
+        Object arg2 = parseObject((String) args.get(1));
+        return arg1.equals(arg2);
     }
 
     public boolean atom(List<?> args) throws Exception {
