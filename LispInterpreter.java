@@ -301,8 +301,12 @@ public class LispInterpreter {
         return !(arg instanceof List);
     }
 
-    public boolean list(List<?> args) throws Exception {
-        return false;
+    public List<Object> list(List<?> args) throws Exception {
+        List<Object> result = new ArrayList<>();
+        for (Object arg : args) {
+            result.add(parseObject((String) arg));
+        }
+        return result;
     }
 
     public Object cond(List<?> args) throws Exception {
