@@ -270,17 +270,45 @@ public class LispInterpreter {
     //TODO: implement methods
 
     public Object substract(List<?> args) throws Exception {
-        return null;
+        if (args.size() < 2) {
+            throw new Exception("No hay suficientes argumentos para la resta");
+        }
+        Object result = parseObject((String) args.get(0));
+        for (int i = 1; i < args.size(); i++) {
+            Object tempResult = parseObject((String) args.get(i));
+            if (result instanceof Double || tempResult instanceof Double) {
+                result = ((Number) result).doubleValue() - ((Number) tempResult).doubleValue();
+            } else {
+                result = ((Number) result).intValue() - ((Number) tempResult).intValue();
+            }
+        }
+        return result;
     }
 
     public Object product(List<?> args) throws Exception {
-        return null;
+        Object result = 1;
+        for (Object arg : args) {
+            Object tempResult = parseObject((String) arg);
+            if (result instanceof Double || tempResult instanceof Double) {
+                result = ((Number) result).doubleValue() * ((Number) tempResult).doubleValue();
+            } else {
+                result = ((Number) result).intValue() * ((Number) tempResult).intValue();
+            }
+        }
+        return result;
     }
 
     public Object divide(List<?> args) throws Exception {
-        return null;
+        if (args.size() != 2) {
+        throw new Exception("La división necesita exactamente 2 valores");
     }
-
+    Object dividend = parseObject((String) args.get(0));
+    Object divisor = parseObject((String) args.get(1));
+    if (((Number) divisor).doubleValue() == 0) {
+        throw new Exception("No se puede dividir entre cero");
+    }
+    return ((Number) dividend).doubleValue() / ((Number) divisor).doubleValue();
+}
     public boolean moreThan(List<?> args) throws Exception {
         return false;
     }
