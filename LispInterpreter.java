@@ -222,14 +222,21 @@ public class LispInterpreter {
 
             default:
                 Object item = globalEnv.get(first);
+                if (item == null) {
+                    throw new Exception("Variable no definida: " + first);
+                }
                 if (item.getClass() == LispFunction.class) {
                     if (numberOfParams == ((LispFunction) item).getParams().size()) {
-                        return ((LispFunction) item).apply(list.subList(1, list.size()));
+                        Object result = ((LispFunction) item).apply(list.subList(1, list.size()));
+                        if (!(result instanceof Number)) {
+                            throw new Exception("El tipo de retorno no es numérico para la función: " + first);
+                        }
+                        return result;
                     } else {
-                        throw new Exception();
+                        throw new Exception("Número incorrecto de parámetros para la función: " + first);
                     }
                 } else {
-                    throw new Exception();
+                    throw new Exception("Nombre no reconocido: " + first);
                 }
         }
 
@@ -281,37 +288,60 @@ public class LispInterpreter {
         return null;
     }
 
+    // La función 'moreThan' toma una lista de dos argumentos y devuelve verdadero si el primer argumento es mayor que el segundo.
     public boolean moreThan(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception();
+        }
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
+        if (arg1 instanceof Number && arg2 instanceof Number) {
+            return ((Number) arg1).doubleValue() > ((Number) arg2).doubleValue();
+        } else {
+            throw new Exception();
+        }
     }
 
+    // La función 'lessThan' toma una lista de dos argumentos y devuelve verdadero si el primer argumento es menor que el segundo.
     public boolean lessThan(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception();
+        }
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
+        if (arg1 instanceof Number && arg2 instanceof Number) {
+            return ((Number) arg1).doubleValue() < ((Number) arg2).doubleValue();
+        } else {
+            throw new Exception();
+        }
     }
 
+    // La función 'equal' toma una lista de dos argumentos y devuelve verdadero si ambos argumentos son iguales.
     public boolean equal(List<?> args) throws Exception {
         if (args.size() != 2) {
-            throw new Exception("La función Equal requiera dos argumentos");
+            throw new Exception();
         }
-        Object arg1 = parseObject((String) args.get(0));
-        Object arg2 = parseObject((String) args.get(1));
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
         return arg1.equals(arg2);
     }
 
+    // La función 'atom' toma una lista de argumentos y devuelve verdadero si el primer argumento no es una lista.
     public boolean atom(List<?> args) throws Exception {
         if (args.size() != 1) {
-            throw new Exception("La función Atom requiera solo un argumento");
+            throw new Exception();
         }
-        Object arg = parseObject((String) args.get(0));
+        Object arg = args.get(0);
         return !(arg instanceof List);
     }
 
-    public List<Object> list(List<?> args) throws Exception {
-        List<Object> result = new ArrayList<>();
-        for (Object arg : args) {
-            result.add(parseObject((String) arg));
+    // La función 'list' toma una lista de argumentos y devuelve verdadero si el primer argumento es una lista.
+    public boolean list(List<?> args) throws Exception {
+        if (args.size() != 1) {
+            throw new Exception();
         }
-        return result;
+        Object arg = args.get(0);
+        return arg instanceof List;
     }
 
     public Object cond(List<?> args) throws Exception {
