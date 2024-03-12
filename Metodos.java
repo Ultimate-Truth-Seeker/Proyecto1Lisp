@@ -1,75 +1,41 @@
-public Object substract(List<?> args) throws Exception {
-    if (args.isEmpty()) {
-        throw new Exception("No arguments for subtraction");
-    }
-
-    double result = (Double) args.get(0);
-
-    for (int i = 1; i < args.size(); i++) {
-        result -= (Double) args.get(i);
-    }
-
-    return result;
-}
-
-public Object product(List<?> args) throws Exception {
-    if (args.isEmpty()) {
-        throw new Exception("No arguments for multiplication");
-    }
-
-    double result = 1.0;
-
+public Object cond(List<?> args) throws Exception {
     for (Object arg : args) {
-        result *= (Double) arg;
+        if (!(arg instanceof List) || ((List<?>) arg).size() != 2) {
+            throw new Exception("Each argument to cond must be a pair");
+        }
+
+        List<?> pair = (List<?>) arg;
+        Object condition = pair.get(0);
+        Object expression = pair.get(1);
+
+        // Evalúa la condición. Si es verdadera, evalúa y devuelve la expresión.
+        Object conditionResult;
+        if (condition instanceof List) {
+            conditionResult = eval((List<?>) condition);
+        } else if (condition instanceof String && globalEnv.containsKey(condition)) {
+            conditionResult = globalEnv.get(condition);
+        } else {
+            conditionResult = condition;
+        }
+
+        if (Boolean.TRUE.equals(conditionResult)) {
+            return eval((List<?>) expression);
+        }
     }
 
-    return result;
+    // Si ninguna condición se evalúa como verdadera, devuelve null.
+    return null;
 }
 
-public Object divide(List<?> args) throws Exception {
-    if (args.size() != 2) {
-        throw new Exception("Expected exactly two arguments for division");
+
+public Object quote(List<?> args) throws Exception {
+    // La función quote en Lisp simplemente devuelve su argumento sin evaluarlo.
+    // En otras palabras, quote es una forma de especificar datos literales en Lisp.
+
+    if (args.size() != 1) {
+        throw new Exception("Expected exactly one argument for quote");
     }
 
-    double numerator = (Double) args.get(0);
-    double denominator = (Double) args.get(1);
-
-    if (denominator == 0) {
-        throw new Exception("Cannot divide by zero");
-    }
-
-    return numerator / denominator;
-}
-
-public boolean moreThan(List<?> args) throws Exception {
-    if (args.size() != 2) {
-        throw new Exception("Expected exactly two arguments for comparison");
-    }
-
-    double first = (Double) args.get(0);
-    double second = (Double) args.get(1);
-
-    return first > second;
-}
-
-public boolean lessThan(List<?> args) throws Exception {
-    if (args.size() != 2) {
-        throw new Exception("Expected exactly two arguments for comparison");
-    }
-
-    double first = (Double) args.get(0);
-    double second = (Double) args.get(1);
-
-    return first < second;
-}
-
-public boolean equal(List<?> args) throws Exception {
-    if (args.size() != 2) {
-        throw new Exception("Expected exactly two arguments for comparison");
-    }
-
-    double first = (Double) args.get(0);
-    double second = (Double) args.get(1);
-
-    return first == second;
+    // Devuelve el argumento tal cual, sin evaluarlo.
+    return args.get(0);
 }
