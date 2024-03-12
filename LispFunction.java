@@ -1,5 +1,7 @@
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class LispFunction {
     protected String name;
@@ -9,8 +11,28 @@ public class LispFunction {
     
     
 
-    public Object apply(List<?> argList) {
-        return null;
+    public Object apply(List<?> argList) throws Exception {
+        Stack<Map<String, Object>> localEnvs = LispInterpreter.getInterpreter().getLocalEnvs();
+        localEnvs.push(new HashMap<>(env));
+
+
+            for (int i = 0; i < params.size(); i++) {
+                Object arg = argList.get(i);
+                if (List.class.isAssignableFrom(arg.getClass())){
+                    arg = LispInterpreter.getInterpreter().eval((List<?>)arg);
+                } else if (arg.getClass() == String.class && localEnvs.peek().containsKey(arg)) {
+                    arg = LispInterpreter.getInterpreter().getLocalEnvs().peek().get(arg);
+                }
+
+
+                localEnvs.peek().put((String) params.get(i), arg);
+            }
+
+            Object result = null;
+            result = LispInterpreter.getInterpreter().eval(body);
+
+            localEnvs.pop();
+            return result;
     }
 
 

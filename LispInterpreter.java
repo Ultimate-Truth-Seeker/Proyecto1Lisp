@@ -2,12 +2,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class LispInterpreter {
     private static LispInterpreter interpreter;
     private Map<String, Object> globalEnv = new HashMap<>();
+    private Stack<Map<String, Object>> localEnvs = new Stack<>();
+    
     
 
+    public Stack<Map<String, Object>> getLocalEnvs() {
+        return localEnvs;
+    }
     private LispInterpreter() {
         globalEnv.put("T", true);
         globalEnv.put("NIl", false);
@@ -25,6 +31,8 @@ public class LispInterpreter {
         globalEnv.put("COND", null);
         globalEnv.put("SETQ", null);
         globalEnv.put("DEFUN", null);
+
+        localEnvs.push(globalEnv);
     }
     /**
      * constructor Singleton para el intérprete
@@ -151,9 +159,9 @@ public class LispInterpreter {
             try {
                 toType = Double.parseDouble(element);
             } catch (Exception e2) {
-                if (element.equals("T")) {
+                if (element.toUpperCase().equals("T")) {
                     toType = true;
-                } else if (element.equals("NIL")){ 
+                } else if (element.toUpperCase().equals("NIL")){ 
                     toType = false;
                 } else {
                     toType = (String) element;
@@ -173,6 +181,7 @@ public class LispInterpreter {
     public Object eval(List<?> list) throws Exception {
         String first = (String) list.get(0); // Se obtiene el comando inicial
         int numberOfParams = list.size() - 1;
+        globalEnv = localEnvs.peek();
         switch (first.toUpperCase()) { // Se evalúa si es una función predeterminada, sino se llama al ambiente para retornar el valor de una función nueva
             case "+":
                 return sum(list.subList(1, list.size()));
@@ -289,7 +298,7 @@ public class LispInterpreter {
     
         return result;
     }
-
+    
     public Object product(List<?> args) throws Exception {
         if (args.isEmpty()) {
             throw new Exception("No arguments for multiplication");
@@ -303,7 +312,7 @@ public class LispInterpreter {
     
         return result;
     }
-
+    
     public Object divide(List<?> args) throws Exception {
         if (args.size() != 2) {
         throw new Exception("Expected exactly two arguments for division");
@@ -347,6 +356,7 @@ public class LispInterpreter {
         }
     }
 
+
     // La función 'equal' toma una lista de dos argumentos y devuelve verdadero si ambos argumentos son iguales.
     public boolean equal(List<?> args) throws Exception {
         if (args.size() != 2) {
@@ -364,8 +374,10 @@ public class LispInterpreter {
         }
         Object arg = args.get(0);
         return !(arg instanceof List);
+        
     }
 
+    // La función 'list' toma una lista de argumentos y devuelve verdadero si el primer argumento es una lista.
     // La función 'list' toma una lista de argumentos y devuelve verdadero si el primer argumento es una lista.
     public boolean list(List<?> args) throws Exception {
         if (args.size() != 1) {
@@ -377,32 +389,37 @@ public class LispInterpreter {
 
     public Object cond(List<?> args) throws Exception {
         for (Object arg : args) {
-            if (!(arg instanceof List) || ((List<?>) arg).size() != 2) {
-                throw new Exception("Each argument to cond must be a pair");
-            }
-    
-            List<?> pair = (List<?>) arg;
-            Object condition = pair.get(0);
-            Object expression = pair.get(1);
-    
-            // Evalúa la condición. Si es verdadera, evalúa y devuelve la expresión.
-            Object conditionResult;
-            if (condition instanceof List) {
-                conditionResult = eval((List<?>) condition);
-            } else if (condition instanceof String && globalEnv.containsKey(condition)) {
-                conditionResult = globalEnv.get(condition);
-            } else {
-                conditionResult = condition;
-            }
-    
-            if (Boolean.TRUE.equals(conditionResult)) {
+        if (!(arg instanceof List) || ((List<?>) arg).size() != 2) {
+            throw new Exception("Each argument to cond must be a pair");
+        }
+        System.out.println("llega");
+        List<?> pair = (List<?>) arg;
+        Object condition = pair.get(0);
+        Object expression = pair.get(1);
+
+        // Evalúa la condición. Si es verdadera, evalúa y devuelve la expresión.
+        Object conditionResult;
+        if (condition instanceof List) {
+            conditionResult = eval((List<?>) condition);
+        } else if (condition instanceof String && globalEnv.containsKey(condition)) {
+            conditionResult = globalEnv.get(condition);
+        } else {
+            conditionResult = condition;
+        }
+
+        if (Boolean.TRUE.equals(conditionResult)) {
+            if (expression instanceof List) {
                 return eval((List<?>) expression);
+            } else if (expression instanceof String && globalEnv.containsKey(expression)) {
+                return globalEnv.get(expression);
+            } else {
+                return expression;
             }
         }
-    
-        // Si ninguna condición se evalúa como verdadera, devuelve null.
-        return null;
     }
+
+    // Si ninguna condición se evalúa como verdadera, devuelve null.
+    return null;    }
 
     public Object quote(List<?> args) throws Exception {
         // La función quote en Lisp simplemente devuelve su argumento sin evaluarlo.
