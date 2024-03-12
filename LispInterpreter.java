@@ -353,10 +353,41 @@ public class LispInterpreter {
     }
 
     public void setq(List<?> args) throws Exception {
+        if (args.get(0).getClass() != String.class) {
+            throw new Exception();
+        }
+        String name = (String) args.get(0);
+        if (name.contains("\"")) {
+            throw new Exception();
+        }
+        if (args.get(1).getClass() == String.class) {
+            String asignment = (String) args.get(1);
+            if (globalEnv.get(asignment) != null) {
+                if (globalEnv.get(asignment).getClass() == LispFunction.class) {
+                    throw new Exception(); 
+                } else if (!asignment.contains("\"")) {
+                    setq(List.of(name, globalEnv.get(asignment)));
+                    return;
+            } 
+            } else if (!asignment.contains("\"")) {
+                throw new Exception();
+            }
+        }
+
+        globalEnv.put(name, args.get(1));
+
+        
         return;
     }
 
     public void defun(List<?> args) throws Exception {
+        String name = (String) args.get(0);
+        if (name.contains("\"")) {
+            throw new Exception();
+        }
+        List<?> params = (List<?>) args.get(1);
+        List<?> body = (List<?>) args.get(2);
+        globalEnv.put(name, new LispFunction(name, params, body, globalEnv));
         return;
     }
     
