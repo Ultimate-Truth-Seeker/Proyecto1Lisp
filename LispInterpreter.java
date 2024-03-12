@@ -222,14 +222,21 @@ public class LispInterpreter {
 
             default:
                 Object item = globalEnv.get(first);
+                if (item == null) {
+                    throw new Exception("Variable no definida: " + first);
+                }
                 if (item.getClass() == LispFunction.class) {
                     if (numberOfParams == ((LispFunction) item).getParams().size()) {
-                        return ((LispFunction) item).apply(list.subList(1, list.size()));
+                        Object result = ((LispFunction) item).apply(list.subList(1, list.size()));
+                        if (!(result instanceof Number)) {
+                            throw new Exception("El tipo de retorno no es numérico para la función: " + first);
+                        }
+                        return result;
                     } else {
-                        throw new Exception();
+                        throw new Exception("Número incorrecto de parámetros para la función: " + first);
                     }
                 } else {
-                    throw new Exception();
+                    throw new Exception("Nombre no reconocido: " + first);
                 }
         }
 
@@ -281,24 +288,60 @@ public class LispInterpreter {
         return null;
     }
 
+    // La función 'moreThan' toma una lista de dos argumentos y devuelve verdadero si el primer argumento es mayor que el segundo.
     public boolean moreThan(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception();
+        }
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
+        if (arg1 instanceof Number && arg2 instanceof Number) {
+            return ((Number) arg1).doubleValue() > ((Number) arg2).doubleValue();
+        } else {
+            throw new Exception();
+        }
     }
 
+    // La función 'lessThan' toma una lista de dos argumentos y devuelve verdadero si el primer argumento es menor que el segundo.
     public boolean lessThan(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception();
+        }
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
+        if (arg1 instanceof Number && arg2 instanceof Number) {
+            return ((Number) arg1).doubleValue() < ((Number) arg2).doubleValue();
+        } else {
+            throw new Exception();
+        }
     }
 
+    // La función 'equal' toma una lista de dos argumentos y devuelve verdadero si ambos argumentos son iguales.
     public boolean equal(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 2) {
+            throw new Exception();
+        }
+        Object arg1 = args.get(0);
+        Object arg2 = args.get(1);
+        return arg1.equals(arg2);
     }
 
+    // La función 'atom' toma una lista de argumentos y devuelve verdadero si el primer argumento no es una lista.
     public boolean atom(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 1) {
+            throw new Exception();
+        }
+        Object arg = args.get(0);
+        return !(arg instanceof List);
     }
 
+    // La función 'list' toma una lista de argumentos y devuelve verdadero si el primer argumento es una lista.
     public boolean list(List<?> args) throws Exception {
-        return false;
+        if (args.size() != 1) {
+            throw new Exception();
+        }
+        Object arg = args.get(0);
+        return arg instanceof List;
     }
 
     public Object cond(List<?> args) throws Exception {
@@ -310,10 +353,41 @@ public class LispInterpreter {
     }
 
     public void setq(List<?> args) throws Exception {
+        if (args.get(0).getClass() != String.class) {
+            throw new Exception();
+        }
+        String name = (String) args.get(0);
+        if (name.contains("\"")) {
+            throw new Exception();
+        }
+        if (args.get(1).getClass() == String.class) {
+            String asignment = (String) args.get(1);
+            if (globalEnv.get(asignment) != null) {
+                if (globalEnv.get(asignment).getClass() == LispFunction.class) {
+                    throw new Exception(); 
+                } else if (!asignment.contains("\"")) {
+                    setq(List.of(name, globalEnv.get(asignment)));
+                    return;
+            } 
+            } else if (!asignment.contains("\"")) {
+                throw new Exception();
+            }
+        }
+
+        globalEnv.put(name, args.get(1));
+
+        
         return;
     }
 
     public void defun(List<?> args) throws Exception {
+        String name = (String) args.get(0);
+        if (name.contains("\"")) {
+            throw new Exception();
+        }
+        List<?> params = (List<?>) args.get(1);
+        List<?> body = (List<?>) args.get(2);
+        globalEnv.put(name, new LispFunction(name, params, body, globalEnv));
         return;
     }
     
