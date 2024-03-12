@@ -32,7 +32,7 @@ public class Main {
                                 System.out.println(output); // Evalúa la función, opcionalmente se decidió imprimir el resultado
                             }
                         } catch (Exception e) {
-                            System.err.println("* Exception: Error al ejecutar comando!"); // Mensaje de error si la ejecución falla
+                            System.err.println("* Exception: Error al ejecutar comando!  " + e.getMessage()); // Mensaje de error si la ejecución falla
                         }
                         
                     }

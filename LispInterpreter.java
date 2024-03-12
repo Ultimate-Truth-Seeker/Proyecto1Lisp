@@ -14,6 +14,11 @@ public class LispInterpreter {
     public Stack<Map<String, Object>> getLocalEnvs() {
         return localEnvs;
     }
+
+    public void updateGlobalEnv() {
+        globalEnv = localEnvs.peek();
+    }
+
     private LispInterpreter() {
         globalEnv.put("T", true);
         globalEnv.put("NIl", false);
@@ -33,6 +38,16 @@ public class LispInterpreter {
         globalEnv.put("DEFUN", null);
 
         localEnvs.push(globalEnv);
+
+        String or = "defun or (h k) (cond ((= h t) t) ((= k t) t) (t nil))";
+        String and = "defun and (h k) (cond ((= h nil) nil) ((= k nil) nil) (t t))";
+        String not = "defun not (h) (cond (h nil) (t t))";
+        try {
+            eval(StringToLisp(or)); eval(StringToLisp(and)); eval(StringToLisp(not));
+        } catch (Exception e) {
+            System.err.println("Error de carga. No se puede usar puertas lógicas.");
+        }
+
     }
     /**
      * constructor Singleton para el intérprete
@@ -181,7 +196,7 @@ public class LispInterpreter {
     public Object eval(List<?> list) throws Exception {
         String first = (String) list.get(0); // Se obtiene el comando inicial
         int numberOfParams = list.size() - 1;
-        globalEnv = localEnvs.peek();
+        globalEnv = localEnvs.peek();//System.out.println(globalEnv.containsKey("n")); if (globalEnv.containsKey("n")) {System.out.println(globalEnv.get("n"));}
         switch (first.toUpperCase()) { // Se evalúa si es una función predeterminada, sino se llama al ambiente para retornar el valor de una función nueva
             case "+":
                 return sum(list.subList(1, list.size()));
@@ -237,9 +252,6 @@ public class LispInterpreter {
                 if (item.getClass() == LispFunction.class) {
                     if (numberOfParams == ((LispFunction) item).getParams().size()) {
                         Object result = ((LispFunction) item).apply(list.subList(1, list.size()));
-                        if (!(result instanceof Number)) {
-                            throw new Exception("El tipo de retorno no es numérico para la función: " + first);
-                        }
                         return result;
                     } else {
                         throw new Exception("Número incorrecto de parámetros para la función: " + first);
@@ -249,6 +261,25 @@ public class LispInterpreter {
                 }
         }
 
+    }
+
+    /**
+     * Método para evaluar un argumento. Necesario para poder realizar las operaciones entre tipos adecuados. 
+     * Se evalúan las funciones y se retornan los datos de variables. 
+     * Retorna el objeto mismo si no es función ni variable
+     * 
+     * 
+     * @param arg el argumento a evaluar
+     * @return el resultado de la función, la asignación de variable o el objeto mismo
+     * @throws Exception si ocurre un error al evaluar
+     */
+    public Object getArg(Object arg) throws Exception {
+        if (List.class.isAssignableFrom(arg.getClass())) {
+            return eval((List<?>) arg);
+        } else if (arg.getClass() == String.class && globalEnv.containsKey(arg)) {
+            return globalEnv.get(arg);
+        }
+        return arg;
     }
 
     public Object sum(List<?> args) throws Exception {
@@ -290,10 +321,17 @@ public class LispInterpreter {
             throw new Exception("No arguments for subtraction");
         }
     
-        double result = (Double) args.get(0);
-    
+        Object result = getArg(args.get(0));
+        if (! (result instanceof Number)) {
+            throw new Exception("No retorna un número: " + args.get(0));
+        }
+
         for (int i = 1; i < args.size(); i++) {
-            result -= (Double) args.get(i);
+            Object next = getArg(args.get(i));
+            if (! (next instanceof Number)) {
+                throw new Exception("No retorna un número: " + args.get(i));
+            }
+            result = ((Number) result).doubleValue() - ((Number) next).doubleValue();
         }
     
         return result;
@@ -307,7 +345,7 @@ public class LispInterpreter {
         double result = 1.0;
 
         for (Object arg : args) {
-            result *= (Double) arg;
+            result *= ((Number) getArg(arg)).doubleValue();
         }
     
         return result;
@@ -318,8 +356,8 @@ public class LispInterpreter {
         throw new Exception("Expected exactly two arguments for division");
         }
 
-        double numerator = (Double) args.get(0);
-        double denominator = (Double) args.get(1);
+        double numerator = ((Number) getArg(args.get(0))).doubleValue();
+        double denominator = ((Number) getArg(args.get(1))).doubleValue();
 
         if (denominator == 0) {
         throw new Exception("Cannot divide by zero");
@@ -333,8 +371,8 @@ public class LispInterpreter {
         if (args.size() != 2) {
             throw new Exception();
         }
-        Object arg1 = args.get(0);
-        Object arg2 = args.get(1);
+        Object arg1 = getArg(args.get(0));
+        Object arg2 = getArg(args.get(1));
         if (arg1 instanceof Number && arg2 instanceof Number) {
             return ((Number) arg1).doubleValue() > ((Number) arg2).doubleValue();
         } else {
@@ -347,8 +385,8 @@ public class LispInterpreter {
         if (args.size() != 2) {
             throw new Exception();
         }
-        Object arg1 = args.get(0);
-        Object arg2 = args.get(1);
+        Object arg1 = getArg(args.get(0));
+        Object arg2 = getArg(args.get(1));
         if (arg1 instanceof Number && arg2 instanceof Number) {
             return ((Number) arg1).doubleValue() < ((Number) arg2).doubleValue();
         } else {
@@ -362,8 +400,8 @@ public class LispInterpreter {
         if (args.size() != 2) {
             throw new Exception();
         }
-        Object arg1 = args.get(0);
-        Object arg2 = args.get(1);
+        Object arg1 = getArg(args.get(0));
+        Object arg2 = getArg(args.get(1));
         return arg1.equals(arg2);
     }
 
@@ -372,7 +410,7 @@ public class LispInterpreter {
         if (args.size() != 1) {
             throw new Exception();
         }
-        Object arg = args.get(0);
+        Object arg = getArg(args.get(0));
         return !(arg instanceof List);
         
     }
@@ -392,7 +430,7 @@ public class LispInterpreter {
         if (!(arg instanceof List) || ((List<?>) arg).size() != 2) {
             throw new Exception("Each argument to cond must be a pair");
         }
-        System.out.println("llega");
+
         List<?> pair = (List<?>) arg;
         Object condition = pair.get(0);
         Object expression = pair.get(1);
@@ -453,9 +491,9 @@ public class LispInterpreter {
             } else if (!asignment.contains("\"")) {
                 throw new Exception();
             }
-        }
+        } 
 
-        globalEnv.put(name, args.get(1));
+        globalEnv.put(name, getArg(args.get(1)));
 
         
         return;
@@ -468,7 +506,7 @@ public class LispInterpreter {
         }
         List<?> params = (List<?>) args.get(1);
         List<?> body = (List<?>) args.get(2);
-        globalEnv.put(name, new LispFunction(name, params, body, globalEnv));
+        globalEnv.put(name, new LispFunction(name, params, body));
         return;
     }
     

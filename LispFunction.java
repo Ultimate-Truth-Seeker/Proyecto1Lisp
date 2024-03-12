@@ -13,7 +13,7 @@ public class LispFunction {
 
     public Object apply(List<?> argList) throws Exception {
         Stack<Map<String, Object>> localEnvs = LispInterpreter.getInterpreter().getLocalEnvs();
-        localEnvs.push(new HashMap<>(env));
+        localEnvs.push(new HashMap<>(localEnvs.peek()));
 
 
             for (int i = 0; i < params.size(); i++) {
@@ -32,16 +32,16 @@ public class LispFunction {
             result = LispInterpreter.getInterpreter().eval(body);
 
             localEnvs.pop();
+            LispInterpreter.getInterpreter().updateGlobalEnv();
             return result;
     }
 
 
 
-    public LispFunction(String name, List<?> params, List<?> body, Map<String, Object> env) {
+    public LispFunction(String name, List<?> params, List<?> body) {
         this.name = name;
         this.params = params;
         this.body = body;
-        this.env = env;
     }
 
     public List<?> getParams() {
