@@ -12,7 +12,6 @@ public class LispFunction {
     protected String name;
     protected List<?> params;
     protected List<?> body;
-    protected Map<String, Object> env;
     
     
     /**
